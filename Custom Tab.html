@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Tabs</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            background-image: url(img.avif);
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        #tabs-container {
+            display: flex;
+            background-color:black;
+            color: white;
+            padding: 10px;
+        }
+
+        .tab {
+            padding: 10px;
+            cursor: pointer;
+            margin-right: 10px;
+            background-color: #555;
+            border: 1px solid #444;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tab input {
+            width: 70%;
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .tab-close {
+            cursor: pointer;
+            padding: 8px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #content-container {
+            height: calc(100vh - 50px);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #search-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background-color: #767575b4;
+        }
+
+        #search-input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+        }
+        
+
+        #search-btn {
+            cursor: pointer;
+            padding: 12px;
+            background-color: #45b849;
+            color: white;
+            
+            border: none;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        #search-btn:hover{
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+
+<div id="tabs-container"></div>
+<div id="content-container"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    // Model
+    const tabs = [];
+
+    // View
+    function renderTabs() {
+        const tabsContainer = $('#tabs-container');
+        tabsContainer.empty();
+        tabs.forEach((tab, index) => {
+            const tabElement = $('<div class="tab">');
+            const inputElement = $('<input>').attr('placeholder', 'Enter URL');
+            const closeBtn = $('<button class="tab-close">X</button>');
+
+            inputElement.val(tab.url);
+
+            tabElement.append(inputElement);
+            tabElement.append(closeBtn);
+            tabsContainer.append(tabElement);
+
+            inputElement.on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    loadTabContent(index, $(this).val());
+                }
+            });
+
+            tabElement.on('click', function () {
+                switchTab(index);
+            });
+
+            closeBtn.on('click', function (e) {
+                e.stopPropagation();
+                closeTab(index);
+            });
+        });
+
+        // "+" button for creating new tabs
+        const addTabBtn = $('<div class="tab">+</div>').on('click', createTab);
+        tabsContainer.append(addTabBtn);
+    }
+
+    // Controller
+    function createTab() {
+        tabs.push({ url: '' });
+        renderTabs();
+        switchTab(tabs.length - 1);
+    }
+
+    function closeTab(index) {
+        tabs.splice(index, 1);
+        renderTabs();
+        if (index === tabs.length) {
+            switchTab(index - 1);
+        } else {
+            switchTab(index);
+        }
+    }
+
+    function switchTab(index) {
+        const contentContainer = $('#content-container');
+        const selectedTab = tabs[index];
+        contentContainer.empty();
+
+        if (selectedTab.url) {
+            contentContainer.html(`<iframe src="${selectedTab.url}"></iframe>`);
+        } else {
+            const searchForm = $('<div id="search-form">');
+            const searchInput = $('<input id="search-input" placeholder="Search...">');
+            const searchBtn = $('<button id="search-btn">Search</button>');
+
+            searchBtn.on('click', function () {
+                loadTabContent(index, `https://www.google.com/search?q=${encodeURIComponent(searchInput.val())}`);
+            });
+
+            searchForm.append(searchInput);
+            searchForm.append(searchBtn);
+            contentContainer.append(searchForm);
+        }
+
+        renderTabs();
+    }
+
+    function loadTabContent(index, url) {
+        tabs[index].url = url;
+        switchTab(index);
+    }
+
+    // Initial setup
+    createTab();
+
+</script>
+
+</body>
+</html>
